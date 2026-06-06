@@ -9,10 +9,12 @@ const prisma = new PrismaClient({ adapter });
 
 export async function POST(
   request: Request,
-  { params }: { params: { appId: string; modelName: string } }
+  props: { params: Promise<{ appId: string; modelName: string }> }
 ) {
   try {
-    const { appId, modelName } = await params;
+    // Await the promise before destructuring
+    const params = await props.params;
+    const { appId, modelName } = params;
     
     // 1. Parse the incoming payload safely
     let body;
@@ -32,7 +34,6 @@ export async function POST(
     }
 
     // 3. Dynamic Schema Validation
-    // We cast the JSON to our expected structure to find the specific model rules
     const config = app.config as any; 
     const modelSchema = config.dataModels?.find((m: any) => m.name === modelName);
 
@@ -58,7 +59,6 @@ export async function POST(
 
       // If it exists, add it to our sanitized object (drops unknown/malicious fields)
       if (value !== undefined) {
-        // (Optional: You can add strict typeof checks here based on field.type)
         sanitizedData[field.name] = value;
       }
     }
@@ -90,9 +90,11 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { appId: string; modelName: string } }
+  props: { params: Promise<{ appId: string; modelName: string }> }
 ) {
   try {
+    // Await the promise before destructuring
+    const params = await props.params;
     const { appId, modelName } = params;
 
     // Fetch the records for this specific app and model
