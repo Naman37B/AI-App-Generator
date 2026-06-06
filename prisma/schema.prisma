@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Stores the AI-generated application configuration
+model App {
+  id        String       @id @default(uuid())
+  name      String
+  config    Json         // The validated JSON defining the UI and Schema
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  records   DataRecord[]
+}
+
+// Stores all dynamic data for every generated app
+model DataRecord {
+  id        String   @id @default(uuid())
+  appId     String
+  app       App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  modelName String   // e.g., "users", "invoices" (maps to the app's config)
+  data      Json     // The actual dynamic row data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([appId, modelName]) // Crucial for fast lookups
+}
